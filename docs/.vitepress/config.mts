@@ -118,7 +118,7 @@ export default defineConfig({
               text: "虚拟机 CentOS7 配置网络 ​",
               link: "/blog/server/virtual-machine-network",
             },
-            { text: "ubuntu 服务器代", link: "/blog/server/clash-for-linux" },
+            { text: "ubuntu 服务器代理", link: "/blog/server/clash-for-linux" },
           ],
         },
       ],
@@ -194,7 +194,7 @@ export default defineConfig({
     // 功能配置
     editLink: {
       pattern:
-        "https://github.com/acheding/vitepress-blog/edit/main/docs/:path",
+        "https://github.com/acheding/vitepress-blog/edit/master/docs/:path",
       text: "在 GitHub 上编辑此页",
     },
 
