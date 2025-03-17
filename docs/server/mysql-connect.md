@@ -1,4 +1,4 @@
-# ubuntu 重启 MySQL 后无法远程连接
+# Ubuntu 重启 MySQL 后无法远程连接
 
 ### idea 报错：
 
