@@ -48,6 +48,7 @@ export default defineConfig({
             { text: "吸顶效果和锚点定位", link: "/css/anchor" },
             { text: "Landscape animation", link: "/css/animation" },
             { text: "伪元素实现菜单动画", link: "/css/pseudo-elements" },
+            { text: "Vue + CSS 实现渐变栅格进度条", link: "/css/progress-bar" },
           ],
         },
       ],
