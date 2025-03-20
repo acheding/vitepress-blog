@@ -14,7 +14,7 @@ const getAllSchedules = async () => {
 2.计算属性同步更新日程
 
 ```js
-const getSchedules = computed(() => {
+const getOneSchedule = computed(() => {
   return function (data) {
     let theDay = [];
     state.schedules.find((item) => {
