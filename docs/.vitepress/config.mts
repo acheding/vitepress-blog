@@ -189,6 +189,14 @@ export default defineConfig({
               text: "Onlyoffice 编译参数配置",
               link: "/onlyoffice/configure",
             },
+            {
+              text: "Onlyoffice 编译过程优化",
+              link: "/onlyoffice/optimization",
+            },
+            {
+              text: "Onlyoffice 更新字体",
+              link: "/onlyoffice/fonts",
+            },
           ],
         },
       ],

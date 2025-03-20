@@ -678,8 +678,8 @@ docker cp onlyoffice:/document-server-package/deb/onlyoffice-documentserver_8.2.
 docker build -t onlyoffice/documentserver:8.2.2-1 .
 ```
 
-> 编译速度过慢主要原因：① 下载 ubuntu 镜像慢。② 下载字体包慢。
-> 解决办法：① 提前下好 Dockerfile 中对应版本的 ubuntu 镜像并导入。② 剪切 core-fonts 中的字体到 Dockerfiler 同目录，通过 Dockerfile 复制到容器中。
+> 编译速度过慢主要原因：① 下载 Ubuntu 镜像慢。② 下载字体包慢。
+> 解决办法：① 提前下好 Dockerfile 中对应版本的 Ubuntu 镜像并导入。② 剪切 core-fonts 中的字体到 Dockerfile 同目录，通过 Dockerfile 复制到容器中，详见[Onlyoffice 编译打包运行过程优化](./optimization.md)。
 
 ### 4.3 使用服务
 
