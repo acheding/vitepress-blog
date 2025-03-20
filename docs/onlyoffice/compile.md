@@ -34,7 +34,7 @@ docker exec -it onlyoffice bash
 ```bash
 cd tools/linux
 
-python3 ./automate.py server
+./automate.py server
 ```
 
 该过程会下载 onlyoffice 源码并编译，编译结果存放于 build_tools/out 目录，持续约 5 个小时，需要配合使用科学上网工具。
@@ -46,7 +46,7 @@ python3 ./automate.py server
 1.编辑 build_tools/server/Common/sources/contants.js，修改连接数。
 
 ```js
-exports.LICENSE_CONNECTIONS = 20; # 将此处修改你想要的连接数
+exports.LICENSE_CONNECTIONS = 2000; # 将此处修改你想要的连接数
 ```
 
 ### 2.2 开启 advancedApi
@@ -80,37 +80,45 @@ build_tools_params = ["--branch", branch,
                     "--qt-dir", os.getcwd() + "/qt_build/Qt-5.9.9"] + params
 ```
 
-### 2.4 增加 Api 方法
+> 也可以在执行命令时添加参数`./automate server --update=0`，效果一样。
+
+### 2.4 增加 connnector.api 方法
+
+① 修改 /home/sdkjs/common/plugins.js，在 externalConnectorMessage 方法中添加相关代码，如这里添加了关闭和打开历史记录的方法，
+`AscCommon.History.TurnOff()`和`AscCommon.History.TurnOn()`是源码中自带的方法，直接引用即可。
 
 ```bash
-vim /sdkjs/word/apiBuilder.js
+vim /home/sdkjs/common/plugins.js
 ```
 
 ```js
-Api.prototype["HistoryTurnOff"] = Api.prototype.HistoryTurnOff;
-
-Api.prototype.HistoryTurnOff = function () {
-  AscCommon.HistoryTurnOff();
-};
+case "historyTurnOff":
+    AscCommon.History.TurnOff();
+    break;
+case "historyTurnOn":
+    AscCommon.History.TurnOn();
+    break;
 ```
 
-### 2.4 执行编译
+② connector 添加相关代码，实现 iframe 对方法的监听，见 2.6 213-222 行高亮处代码。
+
+### 2.5 执行编译
 
 ```bash
-cd /build\*tools/tools/linux
+cd /build_tools/tools/linux
 
-python3 ./automate.py server
+./automate.py server
 ```
 
-等待编译，约半小时左右。
+等待编译，约 15-30 分钟左右。
 
-### 2.5 添加 connector 代码
+### 2.6 添加 connector 代码
 
 编辑 build_tools/out/linux_64/onlyoffice/documentserver/web-apps/apps/api/documents/api.js，在 DocsAPI.DocEditor 函数中添加 connetor 相关代码。
 
 ::: details 点击查看代码
 
-```js
+```js {213-222}
 (function (m) {
   function n() {
     if (window.crypto && window.crypto.getRandomValues) {
@@ -322,6 +330,16 @@ python3 ./automate.py server
             name: a,
           })
         : console.log("Connector is not connected with editor"));
+  };
+  e.prototype.historyTurnOff = function () {
+    this.sendMessage({
+      type: "historyTurnOff",
+    });
+  };
+  e.prototype.historyTurnOn = function () {
+    this.sendMessage({
+      type: "historyTurnOn",
+    });
   };
   e.prototype._correctCustomMenuItems = function (a, b) {
     var c = {
@@ -590,44 +608,6 @@ NODE_CONFIG_DIR=$PWD/../Common/config \
 ./docservice
 ```
 
-### 3.7 官网示例工程测试
-
-1.下载官网示例工程源码
-
-```bash
-git clone https://github.com/ONLYOFFICE/document-editor-vue.git
-```
-
-2.安装依赖
-
-```bash
-yarn install
-```
-
-3.修改配置文件
-进入项目 config/default.json 文件，修改 documentServerUrl 为服务地址。
-
-```json
-{
-  "documentServerUrl": "http://10.214.xxx.xx:xxxx/",
-  "demoStorage": "https://d2nlctn12v279m.cloudfront.net/assets/docs/samples/"
-}
-```
-
-4.运行
-
-```bash
-yarn storybook
-```
-
-### 3.8 精简镜像
-
-整个流程下来，镜像体积可达 30 多 G，事实上，只需要最后编译结果 out 目录即可运行，为了便于移植和部署，可先执行 3.4 和 3.5，然后将 out 目录导出，编写 Dockerfile，构建精简镜像，使用启动脚本，自动完成 3.3、3.2、3.3、3.6 步骤，以下为 Dockerfile 和 init.sh 代码。
-
-[Dockerfile](https://zhang.beer/static/images/Dockerfile0)
-
-[init.sh](https://zhang.beer/static/images/init.sh)
-
 ## 4 启动服务（方式二）(推荐)
 
 ### 4.1 构建 deb 包
@@ -654,6 +634,8 @@ cd /document-server-package
 cat << EOF >> Makefile
 deb_dependencies: \$(DEB_DEPS) #编译文件追加 dependencies
 EOF
+
+export BUILD_NUMBER=1
 
 PRODUCT_VERSION='8.2.2' BUILD_NUMBER='1' make deb_dependencies
 
@@ -696,6 +678,9 @@ docker cp onlyoffice:/document-server-package/deb/onlyoffice-documentserver_8.2.
 docker build -t onlyoffice/documentserver:8.2.2-1 .
 ```
 
+> 编译速度过慢主要原因：① 下载 ubuntu 镜像慢。② 下载字体包慢。
+> 解决办法：① 提前下好 Dockerfile 中对应版本的 ubuntu 镜像并导入。② 剪切 core-fonts 中的字体到 Dockerfiler 同目录，通过 Dockerfile 复制到容器中。
+
 ### 4.3 使用服务
 
 1. 启动镜像
@@ -720,8 +705,8 @@ docker exec onlyoffice sudo sed 's,autostart=false,autostart=true,' -i /etc/supe
 docker exec -it onlyoffice bash
 vim /etc/onlyoffice/documentserver/default.json
 
-limits_tempfile_upload :524288000（500M）
-maxDownloadBytes: 524288000（500M）
+limits_tempfile_upload :524288000
+maxDownloadBytes: 524288000
 uncompressed :"500MB"
 
 "request-filtering-agent" : {
